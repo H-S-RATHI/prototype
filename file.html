@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentStore</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07070C;
+  --surface:#0F0F18;
+  --card:#14141F;
+  --card2:#1A1A28;
+  --border:#ffffff0f;
+  --border2:#ffffff18;
+  --accent:#6C63FF;
+  --accent2:#8B83FF;
+  --accent-glow:#6C63FF28;
+  --text:#F0EFFF;
+  --text2:#9997BB;
+  --text3:#5A5878;
+  --green:#22C87A;
+  --amber:#F5A623;
+  --red:#FF5C5C;
+  --blue:#4A9FFF;
+  --font:'Outfit',sans-serif;
+  --mono:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;height:100vh;display:flex;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0}
+.logo{padding:0 20px 24px;display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-size:17px;font-weight:700;letter-spacing:-0.3px}
+.logo-sub{font-size:10px;color:var(--text3);font-weight:400;letter-spacing:0.5px;margin-top:1px}
+.nav-section{padding:0 12px;margin-bottom:8px}
+.nav-label{font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--text2);transition:all .15s;margin-bottom:2px;position:relative}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:var(--accent-glow);color:var(--accent2)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.nav-text{font-size:13px;font-weight:500}
+.badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:99px}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer}
+.user-card:hover{background:var(--card)}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff}
+.user-name{font-size:13px;font-weight:500}
+.user-plan{font-size:11px;color:var(--text3)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;background:var(--surface)}
+.topbar-title{font-size:16px;font-weight:600;flex:1}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;width:260px}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13px;width:100%}
+.search-box input::placeholder{color:var(--text3)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.content{flex:1;overflow-y:auto;padding:24px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* STORE */
+.filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.filter-chip{padding:6px 14px;border-radius:99px;border:1px solid var(--border2);background:var(--card);color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;transition:all .15s}
+.filter-chip:hover{border-color:var(--accent);color:var(--accent2)}
+.filter-chip.on{background:var(--accent-glow);border-color:var(--accent);color:var(--accent2)}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.agent-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,var(--accent-glow),transparent 60%);opacity:0;transition:opacity .2s}
+.agent-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.agent-card:hover::before{opacity:1}
+.agent-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.agent-emoji{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.agent-info{flex:1}
+.agent-name{font-size:15px;font-weight:600;margin-bottom:3px}
+.agent-category{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em}
+.agent-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.agent-meta{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.stars{display:flex;gap:2px;color:var(--amber)}
+.rating-val{font-size:13px;font-weight:500;color:var(--text)}
+.review-count{font-size:12px;color:var(--text3)}
+.installs{font-size:12px;color:var(--text3)}
+.verified{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--green);background:#22C87A15;padding:3px 8px;border-radius:99px}
+.agent-footer{display:flex;align-items:center;justify-content:space-between}
+.agent-perms{display:flex;gap:6px;flex-wrap:wrap}
+.perm-tag{font-size:10px;color:var(--text3);background:var(--card2);padding:3px 8px;border-radius:99px;border:1px solid var(--border)}
+.install-btn{padding:7px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;transition:all .15s;white-space:nowrap}
+.install-btn:hover{background:var(--accent2)}
+.install-btn.installed{background:var(--green);cursor:default}
+
+/* REVIEWS MODAL */
+.modal-bg{position:fixed;inset:0;background:#000000aa;z-index:100;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;width:520px;max-height:80vh;overflow-y:auto;padding:28px}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px}
+.review-summary{display:flex;gap:24px;align-items:center;background:var(--surface);border-radius:12px;padding:16px 20px;margin-bottom:20px}
+.big-rating{font-size:48px;font-weight:700;color:var(--text);line-height:1}
+.rating-bars{flex:1}
+.rating-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.rating-bar-label{font-size:11px;color:var(--text3);width:8px}
+.rating-bar-track{flex:1;height:6px;background:var(--card2);border-radius:99px;overflow:hidden}
+.rating-bar-fill{height:100%;background:var(--amber);border-radius:99px}
+.review-list{display:flex;flex-direction:column;gap:16px}
+.review-item{border-bottom:1px solid var(--border);padding-bottom:16px}
+.review-item:last-child{border:none;padding:0}
+.review-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.review-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff}
+.review-author{font-size:13px;font-weight:500}
+.review-date{font-size:11px;color:var(--text3);margin-left:auto}
+.review-text{font-size:13px;color:var(--text2);line-height:1.65}
+
+/* MY AGENTS */
+.my-agents-list{display:flex;flex-direction:column;gap:12px}
+.my-agent-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px}
+.my-agent-row:hover{border-color:var(--border2)}
+.ma-emoji{font-size:24px;width:44px;height:44px;background:var(--card2);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.ma-info{flex:1}
+.ma-name{font-size:14px;font-weight:600;margin-bottom:3px}
+.ma-last{font-size:12px;color:var(--text3)}
+.ma-status{display:flex;align-items:center;gap:6px;font-size:12px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.green{background:var(--green)}
+.dot.amber{background:var(--amber)}
+.ma-next{font-size:12px;color:var(--text2);text-align:right;min-width:120px}
+.ma-actions{display:flex;gap:8px}
+.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:14px;transition:all .15s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent2)}
+
+/* HISTORY */
+.history-filters{display:flex;gap:8px;margin-bottom:20px;align-items:center}
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+.history-row:hover{border-color:var(--border2)}
+.hist-icon{font-size:18px;width:36px;height:36px;background:var(--card2);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.hist-info{flex:1}
+.hist-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.hist-detail{font-size:12px;color:var(--text3)}
+.hist-time{font-size:11px;color:var(--text3);text-align:right;min-width:90px}
+.hist-result{font-size:12px;font-weight:500;padding:3px 10px;border-radius:99px}
+.hist-result.new{background:#22C87A18;color:var(--green)}
+.hist-result.none{background:#ffffff08;color:var(--text3)}
+.hist-result.alert{background:#F5A62318;color:var(--amber)}
+
+/* CONNECTED */
+.platforms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.platform-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;transition:all .15s}
+.platform-card:hover{border-color:var(--border2)}
+.platform-top{display:flex;align-items:center;gap:12px}
+.platform-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.platform-name{font-size:14px;font-weight:600}
+.platform-email{font-size:11px;color:var(--text3);margin-top:1px}
+.platform-status{display:flex;align-items:center;justify-content:space-between}
+.connected-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--green)}
+.disconnect-btn{font-size:11px;color:var(--text3);cursor:pointer;background:none;border:none;font-family:var(--font)}
+.disconnect-btn:hover{color:var(--red)}
+.connect-btn-full{width:100%;padding:8px;background:var(--card2);border:1px dashed var(--border2);border-radius:8px;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.connect-btn-full:hover{border-color:var(--accent);color:var(--accent2)}
+.add-platform{background:var(--card);border:1px dashed var(--border2);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;min-height:110px;transition:all .15s}
+.add-platform:hover{border-color:var(--accent);background:var(--accent-glow)}
+.add-platform span{font-size:24px}
+.add-platform p{font-size:12px;color:var(--text3)}
+
+/* SCHEDULE */
+.schedule-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.schedule-list{display:flex;flex-direction:column;gap:10px}
+.schedule-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px}
+.schedule-row:hover{border-color:var(--border2)}
+.sched-icon{font-size:20px;width:40px;height:40px;background:var(--card2);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.sched-info{flex:1}
+.sched-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.sched-time{font-size:12px;color:var(--text3)}
+.sched-freq{font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;background:var(--accent-glow);color:var(--accent2)}
+.toggle{width:36px;height:20px;border-radius:99px;background:var(--card2);border:1px solid var(--border2);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+.toggle.on{background:var(--accent);border-color:var(--accent)}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;left:2px;transition:all .2s}
+.toggle.on::after{left:18px}
+.next-run{font-size:11px;color:var(--text3);text-align:right;min-width:100px}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 56px)}
+.chat-messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;gap:12px;max-width:680px}
+.msg.user{flex-direction:row-reverse;margin-left:auto}
+.msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.msg-avatar.bot{background:var(--accent-glow);border:1px solid var(--accent);color:var(--accent2)}
+.msg-avatar.user{background:linear-gradient(135deg,#6C63FF,#a78bfa);color:#fff;font-weight:600}
+.msg-bubble{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:13px;line-height:1.7;color:var(--text2)}
+.msg.user .msg-bubble{background:var(--accent-glow);border-color:var(--accent);color:var(--text)}
+.msg-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.action-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-size:12px;color:var(--text2);transition:all .15s}
+.action-chip:hover{border-color:var(--accent);color:var(--accent2)}
+.chat-input-area{border-top:1px solid var(--border);padding:16px 24px;background:var(--surface)}
+.chat-input-row{display:flex;gap:10px;align-items:flex-end}
+.chat-input-box{flex:1;background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.chat-input-box textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13px;resize:none;max-height:120px;line-height:1.6}
+.chat-input-box textarea::placeholder{color:var(--text3)}
+.send-btn{width:40px;height:40px;border-radius:10px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0;transition:all .15s}
+.send-btn:hover{background:var(--accent2)}
+.typing{display:flex;align-items:center;gap:4px;padding:4px 0}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* SECTION HEADERS */
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-hd h2{font-size:18px;font-weight:600}
+.section-hd p{font-size:13px;color:var(--text3)}
+
+/* STAT STRIP */
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.stat-val{font-size:24px;font-weight:600;color:var(--text);margin-bottom:3px}
+.stat-label{font-size:12px;color:var(--text3)}
+.stat-delta{font-size:11px;color:var(--green);margin-top:4px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* STAR */
+.s{color:var(--amber);font-size:12px}
+.s.empty{color:var(--card2)}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.screen.active{animation:fadeIn .2s ease}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    <div>
+      <div class="logo-text">AgentStore</div>
+      <div class="logo-sub">AI AUTOMATION</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Discover</div>
+    <div class="nav-item active" onclick="show('store',this)">
+      <span class="nav-icon">🏪</span><span class="nav-text">Agent Store</span>
+    </div>
+    <div class="nav-item" onclick="show('chat',this)">
+      <span class="nav-icon">💬</span><span class="nav-text">Custom Task</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">My Workspace</div>
+    <div class="nav-item" onclick="show('myagents',this)">
+      <span class="nav-icon">⚡</span><span class="nav-text">My Agents</span>
+      <span class="badge">5</span>
+    </div>
+    <div class="nav-item" onclick="show('history',this)">
+      <span class="nav-icon">📋</span><span class="nav-text">Run History</span>
+    </div>
+    <div class="nav-item" onclick="show('schedule',this)">
+      <span class="nav-icon">🕐</span><span class="nav-text">Schedule</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Settings</div>
+    <div class="nav-item" onclick="show('platforms',this)">
+      <span class="nav-icon">🔗</span><span class="nav-text">Connected Apps</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">AK</div>
+      <div>
+        <div class="user-name">Aryan K.</div>
+        <div class="user-plan">Pro Plan</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Agent Store</div>
+    <div class="search-box">
+      <span style="color:var(--text3);font-size:14px">🔍</span>
+      <input type="text" placeholder="Search agents...">
+    </div>
+    <button class="btn btn-primary">+ Build Agent</button>
+  </div>
+
+  <div class="content">
+
+    <!-- STORE -->
+    <div class="screen active" id="screen-store">
+      <div class="stat-strip">
+        <div class="stat-card"><div class="stat-val">247</div><div class="stat-label">Agents available</div><div class="stat-delta">↑ 12 this week</div></div>
+        <div class="stat-card"><div class="stat-val">5</div><div class="stat-label">Installed</div><div class="stat-delta">Running now</div></div>
+        <div class="stat-card"><div class="stat-val">38</div><div class="stat-label">Tasks run today</div><div class="stat-delta">↑ 6 from yesterday</div></div>
+        <div class="stat-card"><div class="stat-val">2.4h</div><div class="stat-label">Time saved today</div><div class="stat-delta">↑ 23%</div></div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-chip on" onclick="filterChip(this)">All</div>
+        <div class="filter-chip" onclick="filterChip(this)">LinkedIn</div>
+        <div class="filter-chip" onclick="filterChip(this)">Email</div>
+        <div class="filter-chip" onclick="filterChip(this)">Freelance</div>
+        <div class="filter-chip" onclick="filterChip(this)">Competitors</div>
+        <div class="filter-chip" onclick="filterChip(this)">Social</div>
+        <div class="filter-chip" onclick="filterChip(this)">Finance</div>
+        <div class="filter-chip" onclick="filterChip(this)">Research</div>
+      </div>
+
+      <div class="section-hd">
+        <h2>Featured Agents</h2>
+        <p>Community reviewed & security verified</p>
+      </div>
+
+      <div class="agents-grid">
+
+        <div class="agent-card" onclick="openReviews('linkedin')">
+          <div class="agent-top">
+            <div class="agent-emoji" style="background:#0A66C215">💼</div>
+            <div class="agent-info">
+              <div class="agent-name">LinkedIn Lead Monitor</div>
+              <div class="agent-category">LinkedIn · Lead Gen</div>
+            </div>
+          </div>
+          <div class="agent-desc">Checks your LinkedIn every morning. Surfaces new job posts, client leads, and connection requests matching your profile. Compares to yesterday so you only see what's new.</div>
+          <div class="agent-meta">
+            <div class="stars">★★★★★</div>
+            <span class="rating-val">4.9</span>
+            <span class="review-count">(312 reviews)</span>
+            <span class="installs">· 8.4k installs</span>
+          </div>
+          <div class="agent-footer">
+            <div class="agent-perms">
+              <span class="perm-tag">LinkedIn</span>
+              <span class="verified">✓ Verified</span>
+            </div>
+            <button class="install-btn installed" onclick="event.stopPropagation()">✓ Installed</button>
+          </div>
+        </div>
+
+        <div class="agent-card" onclick="openReviews('competitor')">
+          <div class="agent-top">
+            <div class="agent-emoji" style="background:#FF5C5C15">👁️</div>
+            <div class="agent-info">
+              <div class="agent-name">Competitor Watcher</div>
+              <div class="agent-category">Web · Monitoring</div>
+            </div>
+          </div>
+          <div class="agent-desc">Tracks any website you specify. Detects price changes, new products, or updated content. Sends you an instant alert the moment anything changes.</div>
+          <div class="agent-meta">
+            <div class="stars">★★★★★</div>
+            <span class="rating-val">4.8</span>
+            <span class="review-count">(198 reviews)</span>
+            <span class="installs">· 5.1k installs</span>
+          </div>
+          <div class="agent-footer">
+            <div class="agent-perms">
+              <span class="perm-tag">Any website</span>
+              <span class="verified">✓ Verified</span>
+            </div>
+            <button class="install-btn installed" onclick="event.stopPropagation()">✓ Installed</button>
+          </div>
+        </div>
+
+        <div class="agent-card" onclick="openReviews('upwork')">
+          <div class="agent-top">
+            <div class="agent-emoji" style="background:#14A80015">🟢</div>
+            <div class="agent-info">
+              <div class="agent-name">Upwork Proposal Tracker</div>
+              <div class="agent-category">Freelance · Upwork</div>
+            </div>
+          </div>
+          <div class="agent-desc">Checks the status of every proposal you've submitted on Upwork. Tells you which were viewed, shortlisted, or declined — without logging in yourself.</div>
+          <div class="agent-meta">
+            <div class="stars">★★★★<span class="empty">★</span></div>
+            <span class="rating-val">4.6</span>
+            <span class="review-count">(144 reviews)</span>
+            <span class="installs">· 3.8k installs</span>
+          </div>
+          <div class="agent-footer">
+            <div class="agent-perms">
+              <span class="perm-tag">Upwork</span>
+              <span class="verified">✓ Verified</span>
+            </div>
+            <button class="install-btn" onclick="installAgent(this,event)">Install</button>
+          </div>
+        </div>
+
+        <div class="agent-card" onclick="openReviews('lead')">
+          <div class="agent-top">
+            <div class="agent-emoji" style="background:#6C63FF15">🎯</div>
+            <div class="agent-info">
+              <div class="agent-name">Freelance Lead Finder</div>
+              <div class="agent-category">Freelance · Multi-platform</div>
+            </div>
+          </div>
+          <div class="agent-desc">Scans Upwork, Fiverr, LinkedIn, and Freelancer simultaneously. Ranks every new gig by match to your skill profile and delivers a daily shortlist.</div>
+          <div class="agent-meta">
+            <div class="stars">★★★★★</div>
+            <span class="rating-val">4.7</span>
+            <span class="review-count">(276 reviews)</span>
+            <span class="installs">· 6.2k installs</span>
+          </div>
+          <div class="agent-footer">
+            <div class="agent-perms">
+              <span class="perm-tag">Upwork</span>
+              <span class="perm-tag">Fiverr</span>
+              <span class="perm-tag">LinkedIn</span>
+            </div>
+            <button class="install-btn installed" onclick="event.stopPropagation()">✓ Installed</button>
+          </div>
+        </div>
+
+        <div class="agent-card" onclick="openReviews('email')">
+          <div class="agent-top">
+            <div class="agent-emoji" style="background:#4A9FFF15">📧</div>
+            <div class="agent-info">
+              <div class="agent-name">Email Daily Brief</div>
+              <div class="agent-category">Email · Productivity</div>
+            </div>
+          </div>
+          <div class="agent-desc">Reads your inbox, filters out newsletters and noise, and delivers a clean morning summary of everything that actually needs your attention today.</div>
+          <div class="agent-meta">
+            <div class="stars">★★★★★</div>
+            <span class="rating-val">4.9</span>
+            <span class="review-count">(521 reviews)</span>
+            <span class="installs">· 11.2k installs</span>
+          </div>
+          <div class="agent-footer">
+            <div class="agent-perms">
+              <span class="perm-tag">Gmail</span>
+              <span class="verified">✓ Verified</span>
+            </div>
+            <button class="install-btn installed" onclick="event.stopPropagation()">✓ Installed</button>
+          </div>
+        </div>
+
+        <div class="agent-card" onclick="openReviews('reddit')">
+          <div class="agent-top">
+            <div class="agent-emoji" style="background:#FF450015">🔴</div>
+            <div class="agent-info">
+              <div class="agent-name">Reddit Mention Tracker</div>
+              <div class="agent-category">Social · Monitoring</div>
+            </div>
+          </div>
+          <div class="agent-desc">Monitors Reddit for mentions of your brand, product, or any keyword. Aggregates relevant posts and comments into a daily digest with sentiment scores.</div>
+          <div class="agent-meta">
+            <div class="stars">★★★★<span class="empty">★</span></div>
+            <span class="rating-val">4.4</span>
+            <span class="review-count">(88 reviews)</span>
+            <span class="installs">· 2.1k installs</span>
+          </div>
+          <div class="agent-footer">
+            <div class="agent-perms">
+              <span class="perm-tag">Reddit</span>
+            </div>
+            <button class="install-btn" onclick="installAgent(this,event)">Install</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MY AGENTS -->
+    <div class="screen" id="screen-myagents">
+      <div class="stat-strip">
+        <div class="stat-card"><div class="stat-val">5</div><div class="stat-label">Active agents</div></div>
+        <div class="stat-card"><div class="stat-val">38</div><div class="stat-label">Runs today</div><div class="stat-delta">All successful</div></div>
+        <div class="stat-card"><div class="stat-val">247</div><div class="stat-label">Total runs</div></div>
+        <div class="stat-card"><div class="stat-val">14.2h</div><div class="stat-label">Time saved</div><div class="stat-delta">This month</div></div>
+      </div>
+
+      <div class="section-hd"><h2>Installed Agents</h2><button class="btn btn-ghost">+ Add more</button></div>
+      <div class="my-agents-list">
+        <div class="my-agent-row">
+          <div class="ma-emoji">💼</div>
+          <div class="ma-info">
+            <div class="ma-name">LinkedIn Lead Monitor</div>
+            <div class="ma-last">Last run: Today 9:00 AM · Found 7 new leads</div>
+          </div>
+          <div class="ma-status"><div class="dot green"></div><span style="color:var(--green);font-size:12px;font-weight:500">Running</span></div>
+          <div class="ma-next"><div style="font-size:11px;color:var(--text3)">Next run</div><div style="font-size:13px;font-weight:500">Tomorrow 9:00 AM</div></div>
+          <div class="ma-actions">
+            <div class="icon-btn" title="Run now">▶</div>
+            <div class="icon-btn" title="Settings">⚙</div>
+            <div class="icon-btn" title="Results">📊</div>
+          </div>
+        </div>
+        <div class="my-agent-row">
+          <div class="ma-emoji">👁️</div>
+          <div class="ma-info">
+            <div class="ma-name">Competitor Watcher</div>
+            <div class="ma-last">Last run: Today 8:30 AM · Price change detected on 1 site</div>
+          </div>
+          <div class="ma-status"><div class="dot amber"></div><span style="color:var(--amber);font-size:12px;font-weight:500">Alert</span></div>
+          <div class="ma-next"><div style="font-size:11px;color:var(--text3)">Next run</div><div style="font-size:13px;font-weight:500">In 30 mins</div></div>
+          <div class="ma-actions">
+            <div class="icon-btn">▶</div>
+            <div class="icon-btn">⚙</div>
+            <div class="icon-btn">📊</div>
+          </div>
+        </div>
+        <div class="my-agent-row">
+          <div class="ma-emoji">🎯</div>
+          <div class="ma-info">
+            <div class="ma-name">Freelance Lead Finder</div>
+            <div class="ma-last">Last run: Today 7:00 AM · 12 new gigs ranked</div>
+          </div>
+          <div class="ma-status"><div class="dot green"></div><span style="color:var(--green);font-size:12px;font-weight:500">Running</span></div>
+          <div class="ma-next"><div style="font-size:11px;color:var(--text3)">Next run</div><div style="font-size:13px;font-weight:500">Tomorrow 7:00 AM</div></div>
+          <div class="ma-actions">
+            <div class="icon-btn">▶</div>
+            <div class="icon-btn">⚙</div>
+            <div class="icon-btn">📊</div>
+          </div>
+        </div>
+        <div class="my-agent-row">
+          <div class="ma-emoji">📧</div>
+          <div class="ma-info">
+            <div class="ma-name">Email Daily Brief</div>
+            <div class="ma-last">Last run: Today 8:00 AM · 4 priority emails flagged</div>
+          </div>
+          <div class="ma-status"><div class="dot green"></div><span style="color:var(--green);font-size:12px;font-weight:500">Running</span></div>
+          <div class="ma-next"><div style="font-size:11px;color:var(--text3)">Next run</div><div style="font-size:13px;font-weight:500">Tomorrow 8:00 AM</div></div>
+          <div class="ma-actions">
+            <div class="icon-btn">▶</div>
+            <div class="icon-btn">⚙</div>
+            <div class="icon-btn">📊</div>
+          </div>
+        </div>
+        <div class="my-agent-row">
+          <div class="ma-emoji">🟢</div>
+          <div class="ma-info">
+            <div class="ma-name">Upwork Proposal Tracker</div>
+            <div class="ma-last">Last run: Yesterday 6:00 PM · 2 proposals shortlisted</div>
+          </div>
+          <div class="ma-status"><div class="dot green"></div><span style="color:var(--green);font-size:12px;font-weight:500">Active</span></div>
+          <div class="ma-next"><div style="font-size:11px;color:var(--text3)">Next run</div><div style="font-size:13px;font-weight:500">Today 6:00 PM</div></div>
+          <div class="ma-actions">
+            <div class="icon-btn">▶</div>
+            <div class="icon-btn">⚙</div>
+            <div class="icon-btn">📊</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="screen" id="screen-history">
+      <div class="section-hd">
+        <h2>Run History</h2>
+        <div class="history-filters">
+          <div class="filter-chip on" onclick="filterChip(this)">All agents</div>
+          <div class="filter-chip" onclick="filterChip(this)">LinkedIn</div>
+          <div class="filter-chip" onclick="filterChip(this)">Email</div>
+        </div>
+      </div>
+      <div class="history-list">
+        <div class="history-row"><div class="hist-icon">📧</div><div class="hist-info"><div class="hist-name">Email Daily Brief</div><div class="hist-detail">4 priority emails · 18 filtered · 2 newsletters</div></div><span class="hist-result new">4 new</span><div class="hist-time">Today · 8:00 AM</div></div>
+        <div class="history-row"><div class="hist-icon">👁️</div><div class="hist-info"><div class="hist-name">Competitor Watcher</div><div class="hist-detail">competitor.com — price dropped $12 on Product X</div></div><span class="hist-result alert">⚠ Alert</span><div class="hist-time">Today · 8:30 AM</div></div>
+        <div class="history-row"><div class="hist-icon">💼</div><div class="hist-info"><div class="hist-name">LinkedIn Lead Monitor</div><div class="hist-detail">7 new leads · 3 job posts · 2 connection requests</div></div><span class="hist-result new">7 new</span><div class="hist-time">Today · 9:00 AM</div></div>
+        <div class="history-row"><div class="hist-icon">🎯</div><div class="hist-info"><div class="hist-name">Freelance Lead Finder</div><div class="hist-detail">12 gigs across 4 platforms · top match: Fiverr</div></div><span class="hist-result new">12 new</span><div class="hist-time">Today · 7:00 AM</div></div>
+        <div class="history-row"><div class="hist-icon">📧</div><div class="hist-info"><div class="hist-name">Email Daily Brief</div><div class="hist-detail">2 priority emails · 24 filtered</div></div><span class="hist-result new">2 new</span><div class="hist-time">Yesterday · 8:00 AM</div></div>
+        <div class="history-row"><div class="hist-icon">💼</div><div class="hist-info"><div class="hist-name">LinkedIn Lead Monitor</div><div class="hist-detail">No new leads since last run</div></div><span class="hist-result none">No change</span><div class="hist-time">Yesterday · 9:00 AM</div></div>
+        <div class="history-row"><div class="hist-icon">🟢</div><div class="hist-info"><div class="hist-name">Upwork Proposal Tracker</div><div class="hist-detail">2 proposals shortlisted · 1 viewed · 0 declined</div></div><span class="hist-result new">Update</span><div class="hist-time">Yesterday · 6:00 PM</div></div>
+        <div class="history-row"><div class="hist-icon">👁️</div><div class="hist-info"><div class="hist-name">Competitor Watcher</div><div class="hist-detail">Checked 3 sites — no changes detected</div></div><span class="hist-result none">No change</span><div class="hist-time">Yesterday · 8:30 AM</div></div>
+      </div>
+    </div>
+
+    <!-- CONNECTED PLATFORMS -->
+    <div class="screen" id="screen-platforms">
+      <div class="section-hd"><h2>Connected Apps</h2><p>Your credentials are encrypted and never shared</p></div>
+      <div class="platforms-grid">
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#EA433515">📧</div>
+            <div><div class="platform-name">Gmail</div><div class="platform-email">aryan@gmail.com</div></div>
+          </div>
+          <div class="platform-status">
+            <div class="connected-badge"><div class="dot green"></div>Connected</div>
+            <button class="disconnect-btn">Disconnect</button>
+          </div>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#4285F415">📅</div>
+            <div><div class="platform-name">Google Calendar</div><div class="platform-email">aryan@gmail.com</div></div>
+          </div>
+          <div class="platform-status">
+            <div class="connected-badge"><div class="dot green"></div>Connected</div>
+            <button class="disconnect-btn">Disconnect</button>
+          </div>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#0A66C215">💼</div>
+            <div><div class="platform-name">LinkedIn</div><div class="platform-email">aryan-k</div></div>
+          </div>
+          <div class="platform-status">
+            <div class="connected-badge"><div class="dot green"></div>Connected</div>
+            <button class="disconnect-btn">Disconnect</button>
+          </div>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#14A80015">🟢</div>
+            <div><div class="platform-name">Upwork</div><div class="platform-email">aryan_dev</div></div>
+          </div>
+          <div class="platform-status">
+            <div class="connected-badge"><div class="dot green"></div>Connected</div>
+            <button class="disconnect-btn">Disconnect</button>
+          </div>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#1DA1F215">🐦</div>
+            <div><div class="platform-name">Twitter / X</div><div class="platform-email">Not connected</div></div>
+          </div>
+          <button class="connect-btn-full">Connect with OAuth →</button>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#E1306C15">📸</div>
+            <div><div class="platform-name">Instagram</div><div class="platform-email">Not connected</div></div>
+          </div>
+          <button class="connect-btn-full">Connect with OAuth →</button>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#FF450015">🔴</div>
+            <div><div class="platform-name">Reddit</div><div class="platform-email">Not connected</div></div>
+          </div>
+          <button class="connect-btn-full">Connect with OAuth →</button>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-top">
+            <div class="platform-icon" style="background:#00B2FF15">💎</div>
+            <div><div class="platform-name">Fiverr</div><div class="platform-email">Not connected</div></div>
+          </div>
+          <button class="connect-btn-full">Connect with OAuth →</button>
+        </div>
+
+        <div class="add-platform">
+          <span>➕</span>
+          <p>Request a new platform</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="screen" id="screen-schedule">
+      <div class="schedule-header">
+        <h2 style="font-size:18px;font-weight:600">Schedule</h2>
+        <button class="btn btn-ghost">+ New schedule</button>
+      </div>
+      <div class="schedule-list">
+        <div class="schedule-row">
+          <div class="sched-icon">📧</div>
+          <div class="sched-info">
+            <div class="sched-name">Email Daily Brief</div>
+            <div class="sched-time">Every day at 8:00 AM</div>
+          </div>
+          <span class="sched-freq">Daily</span>
+          <div class="next-run">Next: Tomorrow 8:00 AM</div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="schedule-row">
+          <div class="sched-icon">💼</div>
+          <div class="sched-info">
+            <div class="sched-name">LinkedIn Lead Monitor</div>
+            <div class="sched-time">Every day at 9:00 AM</div>
+          </div>
+          <span class="sched-freq">Daily</span>
+          <div class="next-run">Next: Tomorrow 9:00 AM</div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="schedule-row">
+          <div class="sched-icon">🎯</div>
+          <div class="sched-info">
+            <div class="sched-name">Freelance Lead Finder</div>
+            <div class="sched-time">Every day at 7:00 AM</div>
+          </div>
+          <span class="sched-freq">Daily</span>
+          <div class="next-run">Next: Tomorrow 7:00 AM</div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="schedule-row">
+          <div class="sched-icon">👁️</div>
+          <div class="sched-info">
+            <div class="sched-name">Competitor Watcher</div>
+            <div class="sched-time">Every hour</div>
+          </div>
+          <span class="sched-freq">Hourly</span>
+          <div class="next-run">Next: In 28 mins</div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="schedule-row">
+          <div class="sched-icon">🟢</div>
+          <div class="sched-info">
+            <div class="sched-name">Upwork Proposal Tracker</div>
+            <div class="sched-time">Every day at 6:00 PM</div>
+          </div>
+          <span class="sched-freq">Daily</span>
+          <div class="next-run">Next: Today 6:00 PM</div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="screen" id="screen-chat" style="padding:0;height:calc(100vh - 56px);display:none;flex-direction:column">
+      <div class="chat-messages" id="chat-messages">
+        <div class="msg">
+          <div class="msg-avatar bot">🤖</div>
+          <div>
+            <div class="msg-bubble">Hey! I can run any web task for you right now — no agent setup needed. Just describe what you want me to do, and I'll handle it using your connected accounts.<br><br>For example: <em>"Check my Upwork proposals and tell me which ones were viewed today"</em></div>
+            <div class="msg-actions">
+              <div class="action-chip" onclick="sendQuick('Check my LinkedIn for new leads today')">💼 Check LinkedIn leads</div>
+              <div class="action-chip" onclick="sendQuick('Summarise my unread emails')">📧 Summarise emails</div>
+              <div class="action-chip" onclick="sendQuick('Find new Fiverr gigs matching my skills')">🎯 Find new gigs</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <div class="chat-input-box">
+            <textarea id="chat-input" rows="1" placeholder="Describe a task — I'll run it now..." onkeydown="handleEnter(event)" oninput="autoResize(this)"></textarea>
+          </div>
+          <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- REVIEWS MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title">Agent Reviews</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px" id="modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal-bg').classList.remove('open')">✕</button>
+    </div>
+    <div class="review-summary">
+      <div><div class="big-rating" id="modal-rating">4.9</div><div style="font-size:12px;color:var(--text3);margin-top:4px" id="modal-rcount"></div></div>
+      <div class="rating-bars">
+        <div class="rating-bar-row"><span class="rating-bar-label">5</span><div class="rating-bar-track"><div class="rating-bar-fill" id="bar5"></div></div></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">4</span><div class="rating-bar-track"><div class="rating-bar-fill" id="bar4"></div></div></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">3</span><div class="rating-bar-track"><div class="rating-bar-fill" id="bar3"></div></div></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">2</span><div class="rating-bar-track"><div class="rating-bar-fill" id="bar2"></div></div></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">1</span><div class="rating-bar-track"><div class="rating-bar-fill" id="bar1"></div></div></div>
+      </div>
+    </div>
+    <div class="review-list" id="review-list"></div>
+  </div>
+</div>
+
+<script>
+const reviewData = {
+  linkedin:{title:'LinkedIn Lead Monitor',sub:'8,412 installs · Security verified',rating:'4.9',count:'312 reviews',bars:[88,8,3,1,0],reviews:[
+    {name:'Priya S.',color:'#6C63FF',initials:'PS',date:'Mar 28',stars:5,text:'This agent changed my mornings. I used to spend 30 minutes manually scanning LinkedIn. Now I wake up to a clean list of only the leads that matter. It even compares to yesterday so I never see the same thing twice.'},
+    {name:'Marcus T.',color:'#22C87A',initials:'MT',date:'Mar 25',stars:5,text:'The delta comparison feature is what makes this special. Not just "here are leads" but "here is what is NEW since yesterday." That distinction saves so much mental energy.'},
+    {name:'Aisha K.',color:'#F5A623',initials:'AK',date:'Mar 20',stars:4,text:'Really solid agent. Occasional miss on job posts in non-English, but for English-language leads it is essentially perfect. Support team was quick to respond.'},
+  ]},
+  competitor:{title:'Competitor Watcher',sub:'5,140 installs · Security verified',rating:'4.8',count:'198 reviews',bars:[82,12,4,1,1],reviews:[
+    {name:'Diego R.',color:'#FF5C5C',initials:'DR',date:'Mar 29',stars:5,text:'Caught a competitor dropping their price at 2am. I was able to respond before any of my clients even noticed. This thing has literally saved me a deal.'},
+    {name:'Yuki M.',color:'#4A9FFF',initials:'YM',date:'Mar 22',stars:5,text:'I track 6 competitor websites at once. The agent handles all of them every hour and only pings me when something actually changes. Exactly what I needed.'},
+    {name:'Ben H.',color:'#a78bfa',initials:'BH',date:'Mar 15',stars:4,text:'Works brilliantly for static pages. Gets a bit inconsistent on SPAs with lots of lazy-loading. Team says fix is incoming.'},
+  ]},
+  upwork:{title:'Upwork Proposal Tracker',sub:'3,820 installs',rating:'4.6',count:'144 reviews',bars:[72,18,7,2,1],reviews:[
+    {name:'Sofia L.',color:'#22C87A',initials:'SL',date:'Mar 27',stars:5,text:'Finally I do not have to refresh Upwork every hour anxiously. The agent checks for me and only tells me when something actually changed. My stress level has genuinely dropped.'},
+    {name:'James W.',color:'#6C63FF',initials:'JW',date:'Mar 19',stars:4,text:'Good agent, does what it says. Would love to see Freelancer.com support added. Upwork tracking itself is rock solid.'},
+  ]},
+  lead:{title:'Freelance Lead Finder',sub:'6,240 installs · Security verified',rating:'4.7',count:'276 reviews',bars:[80,14,4,1,1],reviews:[
+    {name:'Rahul P.',color:'#F5A623',initials:'RP',date:'Mar 30',stars:5,text:'The ranking by skill match is what sets this apart. It does not just dump 200 gigs — it actually scores them and shows me the top 10 first. Every single morning.'},
+    {name:'Nina C.',color:'#FF5C5C',initials:'NC',date:'Mar 24',stars:5,text:'Scanning 4 platforms simultaneously and delivering a ranked list daily. What used to take me 45 minutes now takes zero minutes.'},
+  ]},
+  email:{title:'Email Daily Brief',sub:'11,240 installs · Security verified',rating:'4.9',count:'521 reviews',bars:[91,6,2,0,1],reviews:[
+    {name:'Tom A.',color:'#4A9FFF',initials:'TA',date:'Mar 31',stars:5,text:'I have tried every email app and plugin out there. Nothing comes close to this. It reads everything, filters the noise, and gives me exactly what needs my attention. My inbox anxiety is gone.'},
+    {name:'Leila F.',color:'#a78bfa',initials:'LF',date:'Mar 29',stars:5,text:'The noise filtering is spectacular. I used to get 80 emails a day, 75 of them irrelevant. Now I get a daily brief with the 3–5 that actually matter. Genuinely life changing.'},
+    {name:'Omar S.',color:'#22C87A',initials:'OS',date:'Mar 25',stars:5,text:'Works with my Gmail perfectly. Took two minutes to set up. Been running every morning for 3 weeks without a single issue.'},
+  ]},
+  reddit:{title:'Reddit Mention Tracker',sub:'2,120 installs',rating:'4.4',count:'88 reviews',bars:[65,20,10,3,2],reviews:[
+    {name:'Chloe B.',color:'#FF5C5C',initials:'CB',date:'Mar 28',stars:5,text:'Monitors 8 subreddits for my brand name. Catches things I would never have seen. Great for reputation management.'},
+    {name:'Alex D.',color:'#6C63FF',initials:'AD',date:'Mar 20',stars:4,text:'Solid agent. Sentiment scoring is a nice touch — I can quickly see if a mention is positive or negative without reading every post.'},
+  ]},
+};
+
+function show(screen, el) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const s = document.getElementById('screen-' + screen);
+  s.classList.add('active');
+  if (screen === 'chat') s.style.display = 'flex';
+  if (el) el.classList.add('active');
+  const titles = {store:'Agent Store',chat:'Custom Task',myagents:'My Agents',history:'Run History',platforms:'Connected Apps',schedule:'Schedule'};
+  document.getElementById('topbar-title').textContent = titles[screen] || '';
+}
+
+function filterChip(el) {
+  el.closest('.filter-bar, .history-filters').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function installAgent(btn, e) {
+  e.stopPropagation();
+  btn.textContent = '✓ Installed';
+  btn.classList.add('installed');
+}
+
+function openReviews(key) {
+  const d = reviewData[key];
+  document.getElementById('modal-title').textContent = d.title;
+  document.getElementById('modal-sub').textContent = d.sub;
+  document.getElementById('modal-rating').textContent = d.rating;
+  document.getElementById('modal-rcount').textContent = d.count;
+  const total = d.bars.reduce((a,b)=>a+b,0);
+  [5,4,3,2,1].forEach((n,i) => { document.getElementById('bar'+n).style.width = Math.round(d.bars[i]/total*100)+'%'; });
+  document.getElementById('review-list').innerHTML = d.reviews.map(r => `
+    <div class="review-item">
+      <div class="review-head">
+        <div class="review-avatar" style="background:${r.color}">${r.initials}</div>
+        <span class="review-author">${r.name}</span>
+        <div style="display:flex;gap:2px;margin-left:6px;color:var(--amber);font-size:11px">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <span class="review-date">${r.date}</span>
+      </div>
+      <div class="review-text">${r.text}</div>
+    </div>`).join('');
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal(e) { if (e.target === document.getElementById('modal-bg')) document.getElementById('modal-bg').classList.remove('open'); }
+
+const replies = {
+  'Check my LinkedIn for new leads today': '🔍 Running LinkedIn Lead Monitor now...\n\n**Found 7 new leads since yesterday:**\n\n• **Sarah Johnson** — Head of Product at TechCorp, viewed your profile\n• **Ramesh Patel** — Startup Founder, posted a job matching your skills\n• **Maria Costa** — CTO, sent a connection request\n• +4 more job posts matching "React developer"\n\nWant me to save these or draft outreach messages?',
+  'Summarise my unread emails': '📧 Reading your Gmail inbox...\n\n**4 emails need your attention:**\n\n1. **Invoice overdue** — Client XYZ, $850 unpaid (3 days)\n2. **Meeting request** — Tomorrow 2pm, needs confirm\n3. **Proposal response** — Upwork client replied ✅\n4. **GitHub alert** — Failed build on main branch\n\n22 other emails filtered (newsletters, promos). All good.',
+  'Find new Fiverr gigs matching my skills': '🎯 Scanning Fiverr for new gigs...\n\n**Top 3 matches for you today:**\n\n1. **React Dashboard** — $450 · Budget match 95% · Posted 2h ago\n2. **Next.js landing page** — $280 · Budget match 88% · Posted 4h ago\n3. **Node.js API** — $600 · Budget match 85% · Posted 1h ago\n\n+9 more gigs found. Want me to open any of these?',
+};
+
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  addMsg(text, true);
+  input.value = '';
+  input.style.height = 'auto';
+  setTimeout(() => {
+    const typingId = addTyping();
+    setTimeout(() => {
+      removeTyping(typingId);
+      const reply = replies[text] || '⚡ Running your task now using TinyFish...\n\nI\'ll browse the relevant websites with your stored credentials and bring back the results. This usually takes 20–40 seconds.\n\n_Tip: For recurring tasks like this, you can save it as an agent in the store and schedule it to run automatically._';
+      addMsg(reply, false);
+    }, 1800);
+  }, 300);
+}
+
+function sendQuick(text) {
+  document.getElementById('chat-input').value = text;
+  sendMessage();
+}
+
+function addMsg(text, isUser) {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg' + (isUser ? ' user' : '');
+  const formatted = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/_(.*?)_/g,'<em>$1</em>').replace(/\n/g,'<br>');
+  div.innerHTML = `<div class="msg-avatar ${isUser?'user':'bot'}">${isUser?'AK':'🤖'}</div><div class="msg-bubble">${formatted}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+let typingCount = 0;
+function addTyping() {
+  const id = ++typingCount;
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.id = 'typing-' + id;
+  div.innerHTML = `<div class="msg-avatar bot">🤖</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  const el = document.getElementById('typing-' + id);
+  if (el) el.remove();
+}
+
+function handleEnter(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+</script>
+</body>
+</html>
